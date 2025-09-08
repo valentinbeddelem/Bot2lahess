@@ -1,32 +1,33 @@
-# bot.py
-import os
 import discord
 from discord.ext import commands
-from utils.discord_utils import notify_suggestion_to_discord
+import os
+from keep_alive import keep_alive
 
-TOKEN = os.getenv("DISCORD_BOT_TOKEN")  # Token bot depuis .env
+# ───────────── Load secrets depuis Replit
+TOKEN = os.environ["DISCORD_BOT_TOKEN"]   # secret Replit
+GUILD_ID = int(os.environ["DISCORD_GUILD_ID"])  # secret Replit
 
+# ───────────── Intents & Bot
 intents = discord.Intents.default()
 intents.message_content = True
-intents.guilds = True
-
 bot = commands.Bot(command_prefix="!", intents=intents)
 
+# ───────────── Ready
 @bot.event
 async def on_ready():
-    print(f"Bot connecté : {bot.user}")
+    print(f"✅ Bot connecté en tant que {bot.user}")
 
-# Commande test
+# ───────────── Commandes admin
 @bot.command()
-async def ping(ctx):
-    await ctx.send("Pong !")
-
-# Commande pour valider une suggestion depuis Discord (exemple)
-@bot.command()
+@commands.is_owner()
 async def approve(ctx, suggestion_id: int):
-    # Ici tu peux faire un call vers ton API/site pour valider la fiche
     await ctx.send(f"Suggestion {suggestion_id} approuvée ✅")
-    # Optionnel : notifier ton site ou webhook
-    notify_suggestion_to_discord(suggestion_id, approved=True)
 
+@bot.command()
+@commands.is_owner()
+async def reject(ctx, suggestion_id: int):
+    await ctx.send(f"Suggestion {suggestion_id} refusée ❌")
+
+# ───────────── Keep bot alive (Replit ping)
+keep_alive()
 bot.run(TOKEN)
